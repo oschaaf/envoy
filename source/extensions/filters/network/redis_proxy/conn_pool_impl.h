@@ -157,9 +157,9 @@ private:
 
     InstanceImpl& parent_;
     Event::Dispatcher& dispatcher_;
-    Upstream::ThreadLocalCluster* cluster_;
+    Upstream::ThreadLocalCluster* cluster_{};
     std::unordered_map<Upstream::HostConstSharedPtr, ThreadLocalActiveClientPtr> client_map_;
-    Envoy::Common::CallbackHandle* local_host_set_member_update_cb_handle_;
+    Envoy::Common::CallbackHandle* host_set_member_update_cb_handle_{};
   };
 
   struct LbContextImpl : public Upstream::LoadBalancerContextBase {

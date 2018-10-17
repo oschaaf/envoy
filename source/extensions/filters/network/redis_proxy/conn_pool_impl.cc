@@ -206,17 +206,14 @@ PoolRequest* InstanceImpl::makeRequest(const std::string& hash_key, const RespVa
 
 InstanceImpl::ThreadLocalPool::ThreadLocalPool(InstanceImpl& parent, Event::Dispatcher& dispatcher,
                                                const std::string& cluster_name)
-    : parent_(parent), dispatcher_(dispatcher), cluster_(parent_.cm_.get(cluster_name)) {
+    : parent_(parent), dispatcher_(dispatcher) {
 
-  // TODO(mattklein123): Redis is not currently safe for use with CDS. In order to make this work
-  //                     we will need to add thread local cluster removal callbacks so that we can
-  //                     safely clean things up and fail requests.
-  ASSERT(!cluster_->info()->addedViaApi());
+  /*ASSERT(!cluster_->info()->addedViaApi());
   local_host_set_member_update_cb_handle_ = cluster_->prioritySet().addMemberUpdateCb(
       [this](uint32_t, const std::vector<Upstream::HostSharedPtr>&,
              const std::vector<Upstream::HostSharedPtr>& hosts_removed) -> void {
         onHostsRemoved(hosts_removed);
-      });
+      });fixfix*/
 }
 
 InstanceImpl::ThreadLocalPool::~ThreadLocalPool() {
