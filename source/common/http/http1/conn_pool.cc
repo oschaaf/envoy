@@ -220,6 +220,10 @@ void ConnPoolImpl::onResponseComplete(ActiveClient& client) {
 
 void ConnPoolImpl::onUpstreamReady() {
   upstream_ready_enabled_ = false;
+  dispatchPendingRequests();
+}
+
+void ConnPoolImpl::dispatchPendingRequests() {
   while (!pending_requests_.empty() && !ready_clients_.empty()) {
     ActiveClient& client = *ready_clients_.front();
     ENVOY_CONN_LOG(debug, "attaching to next request", *client.codec_client_);
@@ -230,27 +234,26 @@ void ConnPoolImpl::onUpstreamReady() {
     pending_requests_.pop_back();
     client.moveBetweenLists(ready_clients_, busy_clients_);
   }
+  if (!upstream_ready_enabled_) {
+    upstream_ready_timer_->enableTimer(std::chrono::milliseconds(1));
+  }
 }
 
 void ConnPoolImpl::processIdleClient(ActiveClient& client, bool delay) {
   client.stream_wrapper_.reset();
-  if (pending_requests_.empty() || delay) {
-    // There is nothing to service or delayed processing is requested, so just move the connection
-    // into the ready list.
-    ENVOY_CONN_LOG(debug, "moving to ready", *client.codec_client_);
-    client.moveBetweenLists(busy_clients_, ready_clients_);
-  } else {
-    // There is work to do immediately so bind a request to the client and move it to the busy list.
-    // Pending requests are pushed onto the front, so pull from the back.
-    ENVOY_CONN_LOG(debug, "attaching to next request", *client.codec_client_);
-    attachRequestToClient(client, pending_requests_.back()->decoder_,
-                          pending_requests_.back()->callbacks_);
-    pending_requests_.pop_back();
-  }
 
-  if (delay && !pending_requests_.empty() && !upstream_ready_enabled_) {
-    upstream_ready_enabled_ = true;
-    upstream_ready_timer_->enableTimer(std::chrono::milliseconds(0));
+  if (!delay) {
+    client.moveBetweenLists(busy_clients_, ready_clients_);
+  }
+  if (!pending_requests_.empty()) {
+    dispatchPendingRequests();
+  }
+  if (delay) {
+    client.moveBetweenLists(busy_clients_, ready_clients_);
+    if (!pending_requests_.empty() && !upstream_ready_enabled_) {
+      upstream_ready_enabled_ = true;
+      upstream_ready_timer_->enableTimer(std::chrono::milliseconds(0));
+    }
   }
 
   checkForDrained();

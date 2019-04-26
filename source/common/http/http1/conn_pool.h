@@ -113,6 +113,7 @@ protected:
   void onDownstreamReset(ActiveClient& client);
   void onResponseComplete(ActiveClient& client);
   void onUpstreamReady();
+  void dispatchPendingRequests();
   void processIdleClient(ActiveClient& client, bool delay);
 
   Stats::TimespanPtr conn_connect_ms_;
