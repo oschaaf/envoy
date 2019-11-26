@@ -9,10 +9,9 @@
 namespace Envoy {
 namespace Event {
 
-void TimerUtils::millisecondsToTimeval(const std::chrono::milliseconds& d, timeval& tv) {
+void TimerUtils::microSecondsToTimeval(const std::chrono::microseconds& d, timeval& tv) {
   std::chrono::seconds secs = std::chrono::duration_cast<std::chrono::seconds>(d);
   std::chrono::microseconds usecs = std::chrono::duration_cast<std::chrono::microseconds>(d - secs);
-
   tv.tv_sec = secs.count();
   tv.tv_usec = usecs.count();
 }
@@ -37,13 +36,13 @@ TimerImpl::TimerImpl(Libevent::BasePtr& libevent, TimerCb cb, Dispatcher& dispat
 
 void TimerImpl::disableTimer() { event_del(&raw_event_); }
 
-void TimerImpl::enableTimer(const std::chrono::milliseconds& d, const ScopeTrackedObject* object) {
+void TimerImpl::enableTimer(const std::chrono::microseconds& d, const ScopeTrackedObject* object) {
   object_ = object;
   if (d.count() == 0) {
     event_active(&raw_event_, EV_TIMEOUT, 0);
   } else {
     timeval tv;
-    TimerUtils::millisecondsToTimeval(d, tv);
+    TimerUtils::microSecondsToTimeval(d, tv);
     event_add(&raw_event_, &tv);
   }
 }

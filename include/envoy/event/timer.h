@@ -36,11 +36,10 @@ public:
   /**
    * Enable a pending timeout. If a timeout is already pending, it will be reset to the new timeout.
    *
-   * @param ms supplies the duration of the alarm in milliseconds.
+   * @param us supplies the duration of the alarm in microseconds.
    * @param object supplies an optional scope for the duration of the alarm.
    */
-  virtual void enableTimer(const std::chrono::milliseconds& ms,
-                           const ScopeTrackedObject* object = nullptr) PURE;
+  virtual void enableTimer(const std::chrono::microseconds&, const ScopeTrackedObject* = nullptr){};
 
   /**
    * Return whether the timer is currently armed.
