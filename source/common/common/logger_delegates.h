@@ -31,6 +31,32 @@ private:
   AccessLog::AccessLogFileSharedPtr log_file_;
 };
 
+class SplicingSinkDelegate : public SinkDelegate {
+public:
+  SplicingSinkDelegate(std::unique_ptr<SinkDelegate> sink_a,
+                       std::unique_ptr<SinkDelegate> sink_b, DelegatingLogSinkSharedPtr log_sink);
+  ~SplicingSinkDelegate() override;
+
+  // SinkDelegate
+  void log(absl::string_view msg) override;
+  void flush() override;
+
+private:
+  std::unique_ptr<SinkDelegate> sink_a_;
+  std::unique_ptr<SinkDelegate> sink_b_;
+  DelegatingLogSinkSharedPtr log_sink_;
+};
+
+class TestSinkDelegate : public SinkDelegate {
+public:
+  TestSinkDelegate(DelegatingLogSinkSharedPtr log_sink);
+  ~TestSinkDelegate() override;
+
+  // SinkDelegate
+  void log(absl::string_view msg) override;
+  void flush() override;
+};
+
 } // namespace Logger
 
 } // namespace Envoy

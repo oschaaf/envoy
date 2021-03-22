@@ -31,5 +31,39 @@ void FileSinkDelegate::flush() {
   log_file_->flush();
 }
 
+SplicingSinkDelegate::SplicingSinkDelegate(std::unique_ptr<SinkDelegate> sink_a,
+                                           std::unique_ptr<SinkDelegate> sink_b,
+                                           DelegatingLogSinkSharedPtr log_sink)
+    : SinkDelegate(log_sink), sink_a_(std::move(sink_a)), sink_b_(std::move(sink_b)) {
+  setDelegate();
+}
+
+SplicingSinkDelegate::~SplicingSinkDelegate() { restoreDelegate(); }
+
+void SplicingSinkDelegate::log(absl::string_view msg) {
+  sink_a_->log(msg);
+  sink_b_->log(msg);
+}
+
+void SplicingSinkDelegate::flush() {
+  sink_a_->flush();
+  sink_b_->flush();
+}
+
+TestSinkDelegate::TestSinkDelegate(DelegatingLogSinkSharedPtr log_sink)
+    : SinkDelegate(log_sink) {
+  setDelegate();
+}
+
+TestSinkDelegate::~TestSinkDelegate() { restoreDelegate(); }
+
+void TestSinkDelegate::log(absl::string_view msg) {
+  std::cerr << "#" << msg;
+}
+
+void TestSinkDelegate::flush() {
+}
+
+
 } // namespace Logger
 } // namespace Envoy

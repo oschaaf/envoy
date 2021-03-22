@@ -93,8 +93,18 @@ InstanceImpl::InstanceImpl(
   try {
     if (!options.logPath().empty()) {
       try {
-        file_logger_ = std::make_unique<Logger::FileSinkDelegate>(
+        file_logger_.reset();
+        auto file_sink_delegate = std::make_unique<Logger::FileSinkDelegate>(
             options.logPath(), access_log_manager_, Logger::Registry::getSink());
+
+        auto test_sink_delegate =
+            std::make_unique<Logger::TestSinkDelegate>(Logger::Registry::getSink());
+
+        std::unique_ptr<Logger::SinkDelegate> splicing_sink_delegate =
+            std::make_unique<Logger::SplicingSinkDelegate>(std::move(file_sink_delegate),
+                                                           std::move(test_sink_delegate),
+                                                           Logger::Registry::getSink());
+        file_logger_ = std::move(splicing_sink_delegate);
       } catch (const EnvoyException& e) {
         throw EnvoyException(
             fmt::format("Failed to open log-file '{}'. e.what(): {}", options.logPath(), e.what()));
